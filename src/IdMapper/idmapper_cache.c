@@ -71,6 +71,7 @@ hash_table_t *ht_uidgid;
  *
  * To save allocating space, uids and gids are overlayed into the value pointer
  * (.pdata) of the hashbuffer_t.  This union accomplishes that mapping.
+ * When used, the length (.len) is expected to be zero: This is not a pointer.
  */
 
 union idmap_val {
@@ -187,7 +188,10 @@ int compare_namemapper(hash_buffer_t * buff1, hash_buffer_t * buff2)
  */
 int display_idmapper_key(hash_buffer_t * pbuff, char *str)
 {
-  return sprintf(str, "%s", (char *)(pbuff->pdata));
+  if (pbuff->len == 0)
+    return sprintf(str, "%"PRIxPTR, (uintptr_t)(pbuff->pdata));
+  else
+    return sprintf(str, "%s", (char *)(pbuff->pdata));
 }                               /* display_idmapper */
 
 /**
@@ -435,7 +439,7 @@ int idmap_add(hash_table_t * ht, char *key, uint32_t val)
   /* Build the value */
   local_val.real_id = val;
   buffdata.pdata = local_val.id_as_pointer;
-  buffdata.len = sizeof(union idmap_val);
+  buffdata.len = 0;
   LogFullDebug(COMPONENT_IDMAPPER, "Adding the following principal->uid mapping: %s->%lu",
 	       (char *)buffkey.pdata, (unsigned long int)buffdata.pdata);
   rc = HashTable_Test_And_Set(ht, &buffkey, &buffdata,
@@ -467,7 +471,7 @@ int namemap_add(hash_table_t * ht, uint32_t key, char *val)
   /* Build the key */
   local_key.real_id = key;
   buffkey.pdata = local_key.id_as_pointer;
-  buffkey.len = sizeof(union idmap_val);
+  buffkey.len = 0;
 
   LogFullDebug(COMPONENT_IDMAPPER, "Adding the following uid->principal mapping: %lu->%s",
 	       (unsigned long int)buffkey.pdata, (char *)buffdata.pdata);
@@ -491,11 +495,11 @@ int uidgidmap_add(uid_t key, gid_t value)
   /* Build keys and data, no storage is used there, caddr_t pointers are just charged */
   local_key.real_id = key;
   buffkey.pdata = local_key.id_as_pointer;
-  buffkey.len = sizeof(union idmap_val);
+  buffkey.len = 0;
 
   local_val.real_id = value;
   buffdata.pdata = local_val.id_as_pointer;
-  buffdata.len = sizeof(union idmap_val);
+  buffdata.len = 0;
 
   rc = HashTable_Test_And_Set(ht_uidgid, &buffkey, &buffdata,
                               HASHTABLE_SET_HOW_SET_OVERWRITE);
@@ -686,7 +690,7 @@ int namemap_get(hash_table_t * ht, uint32_t key, char *pval)
 
   local_key.real_id = key;
   buffkey.pdata = local_key.id_as_pointer;
-  buffkey.len = sizeof(union idmap_val);
+  buffkey.len = 0;
 
   if(HashTable_Get(ht, &buffkey, &buffval) == HASHTABLE_SUCCESS)
     {
@@ -714,7 +718,7 @@ int uidgidmap_get(uid_t key, gid_t *pval)
 
   local_key.real_id = key;
   buffkey.pdata = local_key.id_as_pointer;
-  buffkey.len = sizeof(union idmap_val);
+  buffkey.len = 0;
 
   if(HashTable_Get(ht_uidgid, &buffkey, &buffval) == HASHTABLE_SUCCESS)
     {
@@ -807,7 +811,7 @@ int namemap_remove(hash_table_t * ht, uint32_t key)
 
   local_key.real_id = key;
   buffkey.pdata = local_key.id_as_pointer;
-  buffkey.len = sizeof(union idmap_val);
+  buffkey.len = 0;
 
   if(HashTable_Del(ht, &buffkey, NULL, &old_data) == HASHTABLE_SUCCESS)
     {
@@ -830,7 +834,7 @@ int uidgidmap_remove(uid_t key)
 
   local_key.real_id = key;
   buffkey.pdata = local_key.id_as_pointer;
-  buffkey.len = sizeof(union idmap_val);
+  buffkey.len = 0;
 
   if(HashTable_Del(ht_uidgid, &buffkey, NULL, &old_data) == HASHTABLE_SUCCESS)
     {
