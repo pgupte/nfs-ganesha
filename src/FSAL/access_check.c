@@ -436,3 +436,4 @@ fsal_status_t fsal_test_access(struct fsal_obj_handle *obj_hdl,
 		return fsalstat(ERR_FSAL_ACCESS, 0);
 }
 /** @} */
+
