@@ -193,7 +193,7 @@ static fsal_status_t lookup(struct fsal_obj_handle *parent,
 			parent);
 		return fsalstat(ERR_FSAL_NOTDIR, 0);
 	}
-	dirfd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, parent_hdl, O_PATH|O_NOACCESS, &fsal_error);
+	dirfd = vfs_fsal_open( parent_hdl, O_PATH|O_NOACCESS, &fsal_error);
 	if(dirfd < 0) {
 		return fsalstat(fsal_error, -dirfd);
 	}
@@ -305,7 +305,7 @@ static fsal_status_t create(struct fsal_obj_handle *dir_hdl,
 	group = attrib->group;
 	unix_mode = fsal2unix_mode(attrib->mode)
 		& ~dir_hdl->export->ops->fs_umask(dir_hdl->export);
-	dir_fd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, myself, O_PATH|O_NOACCESS, &fsal_error);
+	dir_fd = vfs_fsal_open( myself, O_PATH|O_NOACCESS, &fsal_error);
 	if(dir_fd < 0) 
 		return fsalstat(fsal_error, -dir_fd);
 
@@ -369,7 +369,7 @@ static fsal_status_t makedir(struct fsal_obj_handle *dir_hdl,
 	group = attrib->group;
 	unix_mode = fsal2unix_mode(attrib->mode)
 		& ~dir_hdl->export->ops->fs_umask(dir_hdl->export);
-	dir_fd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, myself, O_PATH|O_NOACCESS, &fsal_error);
+	dir_fd = vfs_fsal_open( myself, O_PATH|O_NOACCESS, &fsal_error);
 	if(dir_fd < 0) {
 		return fsalstat(fsal_error, -dir_fd);	
 	}
@@ -464,7 +464,7 @@ static fsal_status_t makenode(struct fsal_obj_handle *dir_hdl,
                 fsal_error = ERR_FSAL_INVAL;
                 goto errout;
         }
-	dir_fd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, myself, O_PATH|O_NOACCESS, &fsal_error);
+	dir_fd = vfs_fsal_open( myself, O_PATH|O_NOACCESS, &fsal_error);
 	if(dir_fd < 0) {
 		goto errout;
 	}
@@ -532,7 +532,7 @@ static fsal_status_t makesymlink(struct fsal_obj_handle *dir_hdl,
 	myself = container_of(dir_hdl, struct vfs_fsal_obj_handle, obj_handle);
 	user = attrib->owner;
 	group = attrib->group;
-	dir_fd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, myself, O_PATH|O_NOACCESS, &fsal_error);
+	dir_fd = vfs_fsal_open( myself, O_PATH|O_NOACCESS, &fsal_error);
 	if(dir_fd < 0) {
 		return fsalstat(fsal_error, -dir_fd);
 	}
@@ -706,14 +706,14 @@ static fsal_status_t linkfile(struct fsal_obj_handle *obj_hdl,
 	if(obj_hdl->type == REGULAR_FILE && myself->u.file.fd >= 0) {
 		srcfd = myself->u.file.fd;
 	} else {
-		srcfd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, myself, O_PATH|O_NOACCESS, &fsal_error);
+		srcfd = vfs_fsal_open( myself, O_PATH|O_NOACCESS, &fsal_error);
 		if(srcfd < 0) {
 			retval = -srcfd;
 			goto out;
 		}
 	}
 	destdir = container_of(destdir_hdl, struct vfs_fsal_obj_handle, obj_handle);
-	destdirfd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, destdir, O_PATH|O_NOACCESS, &fsal_error);
+	destdirfd = vfs_fsal_open( destdir, O_PATH|O_NOACCESS, &fsal_error);
 	if(destdirfd < 0) {
 		retval = destdirfd;
 		goto fileerr;
@@ -776,7 +776,7 @@ static fsal_status_t read_dirents(struct fsal_obj_handle *dir_hdl,
         }
 	entry_cookie = alloca(sizeof(struct fsal_cookie) + sizeof(off_t));
 	myself = container_of(dir_hdl, struct vfs_fsal_obj_handle, obj_handle);
-	dirfd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, myself, O_RDONLY|O_DIRECTORY, &fsal_error);
+	dirfd = vfs_fsal_open( myself, O_RDONLY|O_DIRECTORY, &fsal_error);
 	if(dirfd < 0) {
 		retval = -dirfd;
 		goto out;
@@ -840,13 +840,13 @@ static fsal_status_t renamefile(struct fsal_obj_handle *olddir_hdl,
 	int retval = 0;
 
 	olddir = container_of(olddir_hdl, struct vfs_fsal_obj_handle, obj_handle);
-	oldfd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, olddir, O_PATH|O_NOACCESS, &fsal_error);
+	oldfd = vfs_fsal_open( olddir, O_PATH|O_NOACCESS, &fsal_error);
 	if(oldfd < 0) {
 		retval = -oldfd;
 		goto out;
 	}
 	newdir = container_of(newdir_hdl, struct vfs_fsal_obj_handle, obj_handle);
-	newfd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, newdir, O_PATH|O_NOACCESS, &fsal_error);
+	newfd = vfs_fsal_open( newdir, O_PATH|O_NOACCESS, &fsal_error);
 	if(newfd < 0) {
 		retval = -newfd;
 		close(oldfd);
@@ -995,7 +995,7 @@ static fsal_status_t setattrs(struct fsal_obj_handle *obj_hdl,
 	if (FSAL_TEST_MASK(attrs->mask, ATTR_SIZE))
 		open_flags = O_RDWR;
 
-	fd = CRED_WRAP( opctx->creds, int, vfs_fsal_open_and_stat, myself, &stat, open_flags, &fsal_error);
+	fd = vfs_fsal_open_and_stat( myself, &stat, open_flags, &fsal_error);
 	if(fd < 0) {
 		return fsalstat(fsal_error, -fd);
 	}
@@ -1121,7 +1121,7 @@ static fsal_status_t file_unlink(struct fsal_obj_handle *dir_hdl,
 	int retval = 0;
 
 	myself = container_of(dir_hdl, struct vfs_fsal_obj_handle, obj_handle);
-	fd = CRED_WRAP( opctx->creds, int, vfs_fsal_open, myself, O_PATH|O_NOACCESS, &fsal_error);
+	fd = vfs_fsal_open( myself, O_PATH|O_NOACCESS, &fsal_error);
 	if(fd < 0) {
 		retval = -fd;
 		goto out;
@@ -1361,13 +1361,13 @@ fsal_status_t vfs_lookup_path(struct fsal_export *exp_hdl,
 		goto errout;
 	}
 	if(basepart == path) {
-		dir_fd = CRED_WRAP( opctx->creds, int, open, "/", O_RDONLY);
+		dir_fd = open( "/", O_RDONLY);
 	} else {
 		char *dirpart = alloca(basepart - path + 1);
 
 		memcpy(dirpart, path, basepart - path);
 		dirpart[basepart - path] = '\0';
-		dir_fd = CRED_WRAP( opctx->creds, int, open, dirpart, O_RDONLY, 0600);
+		dir_fd =  open( dirpart, O_RDONLY, 0600);
 	}
 	if(dir_fd < 0) {
 		retval = errno;
