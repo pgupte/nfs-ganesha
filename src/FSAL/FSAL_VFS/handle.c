@@ -599,34 +599,32 @@ vfs_fsal_readlink(struct vfs_fsal_obj_handle *myself,
         int retval = 0;
         int fd;
         ssize_t retlink;
-	struct stat st;
+        char buff[MAXNAMLEN] ;
 
         if(myself->u.symlink.link_content != NULL) {
                 gsh_free(myself->u.symlink.link_content);
                 myself->u.symlink.link_content = NULL;
                 myself->u.symlink.link_size = 0;
         }
+
         fd = vfs_fsal_open(myself, O_PATH|O_NOACCESS, fsal_error);
         if(fd < 0)
                 return fd;
+   
 
-        retval = fstat(fd, &st);
-	if (retval < 0) {
-		goto error;
-	}
+        retlink = readlinkat(fd, "", buff, MAXNAMLEN ) ;
+        if(retlink < 0) {
+                goto error;
+        }
 
-	myself->u.symlink.link_size = st.st_size + 1;
+	myself->u.symlink.link_size = retlink+1 ;
 	myself->u.symlink.link_content
 		= gsh_malloc(myself->u.symlink.link_size);
 	if (myself->u.symlink.link_content == NULL) {
 		goto error;
 	}
 
-        retlink = readlinkat(fd, "", myself->u.symlink.link_content,
-			     myself->u.symlink.link_size);
-        if(retlink < 0) {
-		goto error;
-        }
+        strncpy(  myself->u.symlink.link_content, buff, retlink ) ;
 	myself->u.symlink.link_content[retlink] = '\0';
         close(fd);
 
