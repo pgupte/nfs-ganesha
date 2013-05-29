@@ -165,9 +165,9 @@ void *sigmgr_thread( void * UnusedArg )
         }
       if(signal_caught == SIGUSR1)
         {
-	  LogEvent(COMPONENT_MAIN,
-		   "SIGUSR1_HANDLER: Received SIGUSR1... starting Grace on node - %d", g_nodeid);
-	  nfs4_start_grace(NULL);
+          LogEvent(COMPONENT_MAIN,
+                   "SIGUSR1_HANDLER: Received SIGUSR1.... starting Grace on node - %d", g_nodeid);
+          nfs4_start_grace(NULL);
         }
       if(signal_caught == SIGHUP)
         {
