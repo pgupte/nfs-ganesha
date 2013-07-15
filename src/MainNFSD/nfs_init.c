@@ -737,7 +737,7 @@ int nfs_set_param_from_conf(nfs_start_info_t * p_start_info)
                config_path, config_GetErrorMsg());
     }
 
-  if((rc = read_log_config(config_struct)) < 0)
+  if((rc = read_log_config(config_struct, FALSE)) < 0)
     {
       LogCrit(COMPONENT_INIT,
               "Error while parsing log configuration");

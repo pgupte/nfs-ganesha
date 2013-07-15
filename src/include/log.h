@@ -446,7 +446,7 @@ void DisplayErrorComponentLogLine(log_components_t   component,
                                   int                num_error,
                                   int                status);
 
-int read_log_config(config_file_t in_config);
+int read_log_config(config_file_t in_config, int reread);
 void reread_log_config();
 
 typedef enum log_type
