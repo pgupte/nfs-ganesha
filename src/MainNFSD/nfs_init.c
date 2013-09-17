@@ -369,9 +369,7 @@ void *sigmgr_thread(void *UnusedArg)
  * @param[in] log_path     Log path
  */
 void nfs_prereq_init(char *program_name,
-		     char *host_name,
-		     int debug_level,
-		     char *log_path)
+		     char *host_name)
 {
   /* Initialize logging */
   SetNamePgm(program_name);
@@ -379,13 +377,6 @@ void nfs_prereq_init(char *program_name,
   SetNameHost(host_name);
 
   InitLogging();
-  if (log_path)
-    SetDefaultLogging(log_path);
-
-  if (debug_level >= 0)
-    SetLevelDebug(debug_level);
-
-  ReadLogEnvironment();
 
   /* Register error families */
   AddFamilyError(ERR_POSIX, "POSIX Errors", tab_systeme_status);

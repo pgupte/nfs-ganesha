@@ -1334,6 +1334,15 @@ void ReadLogEnvironment()
 
 }                               /* ReadLogEnvironment */
 
+void ProcessLogCmdArgs(char *log_path, int debug_level)
+{
+  if (log_path[0] != '\0')
+    SetDefaultLogging(log_path);
+
+  if (debug_level >= 0)
+    SetLevelDebug(debug_level);
+}
+
 /*
  * Routines for managing error messages
  */
@@ -2305,6 +2314,7 @@ void SetDefaultLogging(const char *name)
 
   _activate_log_facility(facility);
 
+  facility->lf_max_level = NIV_FULL_DEBUG;
   pthread_rwlock_unlock(&log_rwlock);
   LogEvent(COMPONENT_LOG, "Setting default log destination to name %s", name);
 }                               /* SetDefaultLogging */
