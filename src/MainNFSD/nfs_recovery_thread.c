@@ -150,7 +150,9 @@ nfs_release_v4_client(char *ip)
                                 PTHREAD_RWLOCK_UNLOCK(&ht->partitions[i].lock);
 
                                 P(recp->cr_mutex);
-                                (void) nfs_client_id_expire(cp);
+
+                                (void) nfs_client_id_expire(cp, 1);
+
                                 V(recp->cr_mutex);
 
                                 dec_client_id_ref(cp);
