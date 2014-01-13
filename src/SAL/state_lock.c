@@ -2795,7 +2795,7 @@ state_status_t state_nlm_notify(state_nsm_client_t   * pnsmclient,
       /* Remove from the client lock list */
       glist_del(&found_entry->sle_client_locks);
 
-      if(found_entry->sle_state == pstate)
+      if(pstate && (found_entry->sle_state == pstate))
         {
           /* This is a new lock acquired since the client rebooted, retain it. */
           LogEntry("Don't release new lock", found_entry);
