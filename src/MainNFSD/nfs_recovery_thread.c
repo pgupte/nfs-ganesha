@@ -197,7 +197,7 @@ char workpath[PATH_MAX];
         notdone = 1;
 
         /* stop at 2 to skip '.' and '..' */
-        for (ientry = (inum - 1); ientry >= 2; ientry--) {
+        for (ientry = 2; ientry < inum; ientry++) {
                 take = rel = 0;
                 switch (namelist[ientry]->d_name[0]) {
                         case 'r':
