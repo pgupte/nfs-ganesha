@@ -2232,6 +2232,8 @@ state_status_t state_lock(cache_entry_t         * pentry,
 
       found_entry_end = lock_end(&found_entry->sle_lock);
 
+        /* What abt lock reclaim case? */
+#if 0
       if((found_entry_end >= plock->lock_start) &&
          (found_entry->sle_lock.lock_start <= plock_end))
         {
@@ -2253,6 +2255,7 @@ state_status_t state_lock(cache_entry_t         * pentry,
               break;
             }
         }
+#endif
 
       if(found_entry_end >= plock_end &&
          found_entry->sle_lock.lock_start <= plock->lock_start &&
