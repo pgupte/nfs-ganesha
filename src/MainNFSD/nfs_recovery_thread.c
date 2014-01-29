@@ -361,7 +361,8 @@ int ientry;
 time_t t_this_entry, t_dead, sticky_time;
 char workpath[PATH_MAX];
 
-        sticky_time = ( NFS_RECOV_CYCLE * NFS_RECOV_GC );
+        /* wait for 60 seconds before deleting the event files */       
+        sticky_time = ( NFS_RECOV_CYCLE * NFS_RECOV_GC * 10);
         t_dead = time(NULL);
         t_dead -= sticky_time;
         ientry = inum - 1;
