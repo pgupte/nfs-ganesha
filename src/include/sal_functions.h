@@ -121,6 +121,7 @@ int Init_9p_hash(void) ;
 /* These refcount functions must not be called holding the ssc_mutex */
 void inc_nsm_client_ref(state_nsm_client_t * pclient);
 void dec_nsm_client_ref(state_nsm_client_t * pclient);
+void dec_nsm_client_reference(state_nsm_client_t * pclient, bool_t del_client);
 
 int display_nsm_client(struct display_buffer * dspbuf,
                        state_nsm_client_t    * pkey);

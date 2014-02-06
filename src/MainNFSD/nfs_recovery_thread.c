@@ -110,7 +110,7 @@ nfs_release_nlm_state(char *ip)
                                                 LogDebug(COMPONENT_THREAD,
                                                          "state_nlm_notify failed with %d",
                                                          status);
-                                        dec_nsm_client_ref(nsm_cp);
+                                        dec_nsm_client_reference(nsm_cp, FALSE);
                                 }
                         }
                         dec_nlm_client_ref(nlm_cp);

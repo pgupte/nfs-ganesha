@@ -564,6 +564,11 @@ void free_nsm_client(state_nsm_client_t *pclient)
 
 void dec_nsm_client_ref(state_nsm_client_t *pclient)
 {
+  return dec_nsm_client_reference(pclient, TRUE);
+}
+
+void dec_nsm_client_reference(state_nsm_client_t *pclient, bool_t del_client)
+{
   char                  str[LOG_BUFF_LEN];
   struct display_buffer dspbuf = {sizeof(str), str, str};
   struct hash_latch     latch;
@@ -658,7 +663,8 @@ void dec_nsm_client_ref(state_nsm_client_t *pclient)
                "Free {%s}",
                str);
 
-  nsm_unmonitor(old_value.pdata);
+  if (del_client)
+    nsm_unmonitor(old_value.pdata);
   free_nsm_client(old_value.pdata);
 }
 
