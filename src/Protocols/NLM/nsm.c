@@ -98,14 +98,6 @@ bool nsm_monitor(state_nsm_client_t *host)
   if(host == NULL)
     return TRUE;
 
-  P(host->ssc_mutex);
-
-  if(atomic_fetch_int32_t(&host->ssc_monitored))
-    {
-      V(host->ssc_mutex);
-      return TRUE;
-    }
-
   nsm_mon.mon_id.mon_name      = host->ssc_nlm_caller_name;
   nsm_mon.mon_id.my_id.my_prog = NLMPROG;
   nsm_mon.mon_id.my_id.my_vers = NLM4_VERS;
@@ -231,8 +223,9 @@ bool nsm_unmonitor(state_nsm_client_t *host)
       return FALSE;
     }
 
-  atomic_store_int32_t(&host->ssc_monitored, FALSE);
   nsm_count--;
+  if(!nsm_count)
+    atomic_store_int32_t(&host->ssc_monitored, FALSE);
 
   LogDebug(COMPONENT_NLM,
            "Unonitored %s for nodename %s", nsm_mon_id.mon_name, nodename);
