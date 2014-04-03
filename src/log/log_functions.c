@@ -617,6 +617,8 @@ struct thread_log_context {
 
 };
 
+__thread struct thread_log_context *t_log_ctxt = NULL;
+
 struct thread_log_context emergency_context = {
 	"* log emergency *",
 	{sizeof(emergency_context.buffer),
@@ -627,9 +629,6 @@ struct thread_log_context emergency_context = {
 pthread_mutex_t emergency_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* threads keys */
-static pthread_key_t thread_key;
-static pthread_once_t once_key = PTHREAD_ONCE_INIT;
-
 #define LogChanges(format, args...) \
 	do { \
 		if (component_log_level[COMPONENT_LOG] == \
@@ -700,40 +699,11 @@ static struct tm *Localtime_r(const time_t *p_time, struct tm *p_tm)
 #define Localtime_r localtime_r
 #endif
 
-/* Init of pthread_keys */
-static void init_keys(void)
-{
-	if (pthread_key_create(&thread_key, NULL) == -1)
-		LogCrit(COMPONENT_LOG,
-			"init_keys - pthread_key_create returned %d (%s)",
-			errno, strerror(errno));
-}				/* init_keys */
-
-/**
- * GetThreadContext :
- * manages pthread_keys.
- */
 static struct thread_log_context *Log_GetThreadContext(int ok_errors)
 {
-	struct thread_log_context *context;
-
-	/* first, we init the keys if this is the first time */
-	if (pthread_once(&once_key, init_keys) != 0) {
-		if (ok_errors)
-			LogCrit(COMPONENT_LOG_EMERG,
-				"Log_GetThreadContext - pthread_once returned %d (%s)",
-				errno, strerror(errno));
-		return &emergency_context;
-	}
-
-	context = (struct thread_log_context *) pthread_getspecific(thread_key);
-
-	/* we allocate the thread key if this is the first time */
-	if (context == NULL) {
-		/* allocates thread structure */
-		context = gsh_malloc(sizeof(struct thread_log_context));
-
-		if (context == NULL) {
+	if (t_log_ctxt == NULL) {
+		t_log_ctxt =  gsh_malloc(sizeof(struct thread_log_context));
+		if (t_log_ctxt == NULL) {
 			if (ok_errors)
 				LogCrit(COMPONENT_LOG_EMERG,
 					"Log_GetThreadContext - malloc returned %d (%s)",
@@ -742,22 +712,17 @@ static struct thread_log_context *Log_GetThreadContext(int ok_errors)
 		}
 
 		/* inits thread structures */
-		context->thread_name = emergency_context.thread_name;
-		context->dspbuf.b_size = sizeof(context->buffer);
-		context->dspbuf.b_start = context->buffer;
-		context->dspbuf.b_current = context->buffer;
-
-		/* set the specific value */
-		pthread_setspecific(thread_key, context);
+		t_log_ctxt->thread_name = emergency_context.thread_name;
+		t_log_ctxt->dspbuf.b_size = sizeof(t_log_ctxt->buffer);
+		t_log_ctxt->dspbuf.b_start = t_log_ctxt->buffer;
+		t_log_ctxt->dspbuf.b_current = t_log_ctxt->buffer;
 
 		if (ok_errors)
 			LogFullDebug(COMPONENT_LOG_EMERG, "malloc => %p",
-				     context);
+				     t_log_ctxt);
 	}
-
-	return context;
-
-}				/* Log_GetThreadContext */
+	return t_log_ctxt;
+}
 
 static inline const char *Log_GetThreadFunction(int ok_errors)
 {
@@ -775,19 +740,9 @@ static inline const char *Log_GetThreadFunction(int ok_errors)
  */
 void Log_FreeThreadContext()
 {
-	struct thread_log_context *context;
-
-	/* Init the key if first time.
-	 * Would if(once_key == PTHREAD_ONCE_INIT) be safe?
-	 * (no race for thread variables) */
-	if (pthread_once(&once_key, init_keys) != 0)
-		return;
-
-	context = (struct thread_log_context *) pthread_getspecific(thread_key);
-
-	if (context) {
-		pthread_setspecific(thread_key, NULL);
-		gsh_free(context);
+	if (t_log_ctxt) {
+		gsh_free(t_log_ctxt);
+		t_log_ctxt = NULL;
 	}
 }
 
