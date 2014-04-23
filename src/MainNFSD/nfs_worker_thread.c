@@ -720,6 +720,7 @@ static void nfs_rpc_execute(request_data_t *req,
 	enum auth_stat auth_rc;
 	bool slocked = false;
 	const char *progname = "unknown";
+	char client_ip_str[SOCK_NAME_MAX + 1];
 
 	/* Initialize permissions to allow nothing */
 	export_perms.options = 0;
@@ -774,6 +775,12 @@ static void nfs_rpc_execute(request_data_t *req,
 		 "has xid=%u", req_ctx.client->hostaddr_str,
 		 (int)svcreq->rq_prog, (int)svcreq->rq_vers,
 		 (int)svcreq->rq_proc, svcreq->rq_xid);
+
+	/*
+	 * Set the client context
+	 */
+	sprint_sockip(req_ctx.caller_addr, client_ip_str, SOCK_NAME_MAX);
+	SetClientIP(client_ip_str);
 
 	/* start the processing clock
 	 * we measure all time stats as intervals (elapsed nsecs) from
