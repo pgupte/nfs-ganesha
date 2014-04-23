@@ -775,6 +775,11 @@ static void nfs_rpc_execute(request_data_t *req,
 		 (int)svcreq->rq_prog, (int)svcreq->rq_vers,
 		 (int)svcreq->rq_proc, svcreq->rq_xid);
 
+	/*
+	 * Set the client IP for this thread 
+	 */
+	SetClientIP(req_ctx.client->hostaddr_str);
+
 	/* start the processing clock
 	 * we measure all time stats as intervals (elapsed nsecs) from
 	 * server boot time.  This gets high precision with simple 64 bit math.

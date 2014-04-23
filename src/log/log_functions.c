@@ -74,6 +74,7 @@ enum log_flag_index_t {
 	LF_TIME,		/*< Time field. */
 	LF_EPOCH,		/*< Server Epoch field (distinguishes server
 				    instance. */
+	LF_CLIENTIP,            /* <Client IP field. */
 	LF_HOSTAME,		/*< Server host name field. */
 	LF_PROGNAME,		/*< Ganesha program name field. */
 	LF_PID,			/*< Ganesha process identifier. */
@@ -109,6 +110,7 @@ enum timedate_formats_t {
 
 struct logfields {
 	bool disp_epoch;
+	bool disp_clientip;
 	bool disp_host;
 	bool disp_prog;
 	bool disp_pid;
@@ -234,6 +236,7 @@ static int syslog_opened;
 
 __thread char thread_name[16];
 __thread char log_buffer[LOG_BUFF_LEN + 1];
+__thread char clientip[INET6_ADDRSTRLEN];
 
 /* threads keys */
 #define LogChanges(format, args...) \
@@ -364,6 +367,17 @@ void SetNameFunction(const char *nom)
 		LogWarn(COMPONENT_LOG,
 			"Thread name %s too long truncated to %s",
 			nom, thread_name);
+	clientip[0] = '\0';
+}
+
+void SetClientIP(const char *ip_str)
+{
+	strncpy(clientip, ip_str, sizeof(clientip));
+	clientip[sizeof(clientip)-1] = '\0';
+	if (strlen(ip_str) >= sizeof(clientip))
+		LogWarn(COMPONENT_LOG,
+			"Client IP string %s is too long, truncated to %s",
+			ip_str, clientip);
 }
 
 /* Installs a signal handler */
@@ -1295,6 +1309,12 @@ static int display_log_component(struct display_buffer *dsp_log,
 	if (b_left <= 0 || max_headers < LH_COMPONENT)
 		return b_left;
 
+	if (b_left > 0 && logfields->disp_clientip) {
+		if (clientip[0] != '\0')
+			b_left = display_printf(dsp_log, "[Client %s] ",
+						clientip);
+	}
+
 	if (b_left > 0 && logfields->disp_threadname) {
 		if (thread_name[0] != '\0')
 			b_left = display_printf(dsp_log, "[%s] ",
@@ -1796,6 +1816,8 @@ static struct config_item format_options[] = {
 		       logfields, user_time_fmt),
 	CONF_ITEM_BOOL("EPOCH", true,
 		       logfields, disp_epoch),
+	CONF_ITEM_BOOL("CLIENTIP", true,
+		       logfields, disp_clientip),
 	CONF_ITEM_BOOL("HOSTNAME", true,
 		       logfields, disp_host),
 	CONF_ITEM_BOOL("PROGNAME", true,
